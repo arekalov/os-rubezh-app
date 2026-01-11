@@ -30,6 +30,7 @@ fun MainScreen(
     val menuItems = listOf(
         MenuItem("RAID", "raid"),
         MenuItem("Указатели / Stripe Units", "pointers"),
+        MenuItem("Жесткий диск", "disk"),
         MenuItem("NUMA", "numa")
     )
 

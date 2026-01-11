@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.arekalov.osrubezh.presentation.disk.DiskScreen
 import com.arekalov.osrubezh.presentation.main.MainScreen
 import com.arekalov.osrubezh.presentation.numa.NUMAScreen
 import com.arekalov.osrubezh.presentation.pointers.PointersScreen
@@ -36,6 +37,10 @@ fun Navigation(
         
         composable(Screen.Numa.route) {
             NUMAScreen()
+        }
+        
+        composable(Screen.Disk.route) {
+            DiskScreen()
         }
     }
 }
