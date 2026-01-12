@@ -40,7 +40,7 @@ fun NumericInputField(
             .background(MaterialTheme.colors.surface)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        if (value.isEmpty()) {
+        if (value.isEmpty()) {`
             Text(
                 text = label,
                 style = MaterialTheme.typography.body2,

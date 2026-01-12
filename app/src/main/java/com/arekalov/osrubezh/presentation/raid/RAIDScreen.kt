@@ -27,6 +27,7 @@ import com.arekalov.osrubezh.presentation.components.MarkdownCard
 import com.arekalov.osrubezh.presentation.components.NumericInputField
 import com.arekalov.osrubezh.presentation.components.ResultCard
 import com.arekalov.osrubezh.presentation.theme.OsrubezhTheme
+import com.arekalov.osrubezh.presentation.utils.NumberFormatter
 
 @Composable
 fun RAIDScreen(
@@ -219,40 +220,7 @@ fun RAIDContent(
             if (uiState.showDetails) {
                 item {
                     MarkdownCard(
-                        content = buildString {
-                            append("## Детальные расчеты\n\n")
-                            append("### 1. Размер диска в байтах\n")
-                            append("```\n")
-                            append("disk_size = ${result.diskSizeGB} * 1024³\n")
-                            append("          = ${result.diskSizeBytes} байт\n")
-                            append("```\n\n")
-                            
-                            append("### 2. Stripe-units на диске\n")
-                            append("```\n")
-                            append("stripes = ${result.diskSizeBytes} / (${result.blockSize} * ${result.suSize})\n")
-                            append("        = ${String.format("%.0f", result.stripes)}\n")
-                            append("```\n\n")
-                            
-                            append("### 3. Блоков на диске\n")
-                            append("```\n")
-                            append("block_count = ${result.diskSizeBytes} / ${result.blockSize}\n")
-                            append("            = ${result.blockCount}\n")
-                            append("```\n\n")
-                            
-                            append("### 4. Время операций\n")
-                            append("- **Запись:** ${String.format("%.0f", result.writeTime)} мкс\n")
-                            append("- **Вычисление:** ${String.format("%.0f", result.calculateTime)} мкс\n")
-                            append("- **Чтение:** ${String.format("%.0f", result.readTime)} мкс (из ${result.validDisks} дисков)\n\n")
-                            
-                            append("### Итоговая формула\n")
-                            append("```\n")
-                            append("answer = ${String.format("%.0f", result.writeTime)} + ")
-                            append("${String.format("%.0f", result.calculateTime)} + ")
-                            append("${String.format("%.0f", result.readTime)}\n")
-                            append("       = ${String.format("%.0f", result.answer)} мкс\n")
-                            append("       = ${String.format("%.7f", result.answerMinutes)} мин\n")
-                            append("```")
-                        }
+                        content = result.getFormattedDetails()
                     )
                 }
             }

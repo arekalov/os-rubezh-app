@@ -27,6 +27,7 @@ import com.arekalov.osrubezh.presentation.components.MarkdownCard
 import com.arekalov.osrubezh.presentation.components.NumericInputField
 import com.arekalov.osrubezh.presentation.components.ResultCard
 import com.arekalov.osrubezh.presentation.theme.OsrubezhTheme
+import com.arekalov.osrubezh.presentation.utils.NumberFormatter
 
 @Composable
 fun PointersScreen(
@@ -169,7 +170,7 @@ fun PointersContent(
             item {
                 ResultCard(
                     title = "Ответ",
-                    content = "${result.totalBlocks} блоков"
+                    content = "${NumberFormatter.format(result.totalBlocks)} блоков"
                 )
             }
             
@@ -183,29 +184,7 @@ fun PointersContent(
             if (uiState.showDetails) {
                 item {
                     MarkdownCard(
-                        content = buildString {
-                            append("## Детальные расчеты\n\n")
-                            append("### Указателей в блоке\n")
-                            append("```\n")
-                            append("ppp = (${result.blockSizeBytes} * 8) / ${result.pointerSizeBits}\n")
-                            append("    = ${result.pointersPerBlock}\n")
-                            append("```\n\n")
-                            
-                            append("### Системные блоки (метаданные)\n")
-                            append("- Размер: **${result.systemBytes} байт**\n")
-                            append("- Блоков: **${result.systemBlocks}**\n\n")
-                            
-                            append("### Файловые блоки (данные)\n")
-                            append("- Размер: **${result.fileBytes} байт**\n")
-                            append("- Блоков: **${result.fileBlocks}**\n\n")
-                            
-                            append("### Итого\n")
-                            append("```\n")
-                            append("Всего байт:  ${result.totalBytes}\n")
-                            append("Всего блоков: ${result.totalBlocks}\n")
-                            append("             (${result.systemBlocks} системных + ${result.fileBlocks} файловых)\n")
-                            append("```")
-                        }
+                        content = result.getFormattedDetails()
                     )
                 }
             }

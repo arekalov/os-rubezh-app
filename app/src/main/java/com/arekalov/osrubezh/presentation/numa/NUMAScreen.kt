@@ -28,6 +28,7 @@ import com.arekalov.osrubezh.presentation.components.MarkdownCard
 import com.arekalov.osrubezh.presentation.components.NumericInputField
 import com.arekalov.osrubezh.presentation.components.ResultCard
 import com.arekalov.osrubezh.presentation.theme.OsrubezhTheme
+import com.arekalov.osrubezh.presentation.utils.NumberFormatter
 
 @Composable
 fun NUMAScreen(
@@ -223,7 +224,7 @@ fun NUMAContent(
             item {
                 ResultCard(
                     title = "Ответ",
-                    content = "${String.format("%.2f", result.answer)} нс"
+                    content = "${NumberFormatter.format(result.answer)} нс"
                 )
             }
             
@@ -237,40 +238,12 @@ fun NUMAContent(
             if (uiState.showDetails) {
                 item {
                     MarkdownCard(
-                        content = buildString {
-                            append("## Детальные расчеты\n\n")
-                            append("### Длительность обращения\n")
-                            append("- **${formatNumber(result.registerTime)} нс** - registers\n")
-                            append("- **${result.l1l2Time} нс** - L1-L2\n")
-                            append("- **${result.localNumaTime} нс** - local NUMA\n")
-                            append("- **${result.otherNumaTime} нс** - other NUMA\n\n")
-                            
-                            append("### Обращений до оптимизации\n")
-                            append("- **${result.registersBefore}** - registers\n")
-                            append("- **${result.l1l2Before}** - L1-L2\n")
-                            append("- **${result.localNumaBefore}** - local NUMA\n")
-                            append("- **${result.otherNumaBefore}** - other NUMA\n\n")
-                            
-                            append("### Обращений после оптимизации\n")
-                            append("- **${result.registersAfter}** - registers\n")
-                            append("- **${result.l1l2After}** - L1-L2\n")
-                            append("- **${result.localNumaAfter}** - local NUMA\n")
-                            append("- **${result.otherNumaAfter}** - other NUMA\n\n")
-                            
-                            append("### Итого\n")
-                            append("- До: **${String.format("%.2f", result.timeBefore)} нс**\n")
-                            append("- После: **${String.format("%.2f", result.timeAfter)} нс**\n")
-                            append("- **Выигрыш: ${String.format("%.2f", result.answer)} нс**")
-                        }
+                        content = result.getFormattedDetails()
                     )
                 }
             }
         }
     }
-}
-
-private fun formatNumber(value: Double): String {
-    return String.format("%.7f", value).trimEnd('0').trimEnd('.')
 }
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)

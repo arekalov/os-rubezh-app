@@ -27,6 +27,7 @@ import com.arekalov.osrubezh.presentation.components.MarkdownCard
 import com.arekalov.osrubezh.presentation.components.NumericInputField
 import com.arekalov.osrubezh.presentation.components.ResultCard
 import com.arekalov.osrubezh.presentation.theme.OsrubezhTheme
+import com.arekalov.osrubezh.presentation.utils.NumberFormatter
 
 @Composable
 fun DiskScreen(
@@ -191,28 +192,28 @@ fun DiskContent(
             item {
                 ResultCard(
                     title = "1. Количество секторов",
-                    content = result.sectorsForFile.toString()
+                    content = NumberFormatter.format(result.sectorsForFile)
                 )
             }
             
             item {
                 ResultCard(
                     title = "2. Количество дорожек",
-                    content = result.tracksForFile.toString()
+                    content = NumberFormatter.format(result.tracksForFile)
                 )
             }
             
             item {
                 ResultCard(
                     title = "3. Размер с фрагментацией",
-                    content = "${result.realSizeFile} байт"
+                    content = "${NumberFormatter.format(result.realSizeFile)} байт"
                 )
             }
             
             item {
                 ResultCard(
                     title = "4. Секторов на последней дорожке",
-                    content = result.sectorsOnLastTrack.toString()
+                    content = NumberFormatter.format(result.sectorsOnLastTrack)
                 )
             }
             
@@ -226,28 +227,7 @@ fun DiskContent(
             if (uiState.showDetails) {
                 item {
                     MarkdownCard(
-                        content = buildString {
-                            append("## Детальные расчеты\n\n")
-                            append("### Геометрия диска\n")
-                            append("- 1 сектор: **${result.bytePerSector} байт**\n")
-                            append("- 1 дорожка: ${result.bytePerSector} × ${result.sectorsPerTrack} = **${result.bytePerTrack} байт**\n")
-                            append("- 1 поверхность: ${result.tracksPerSurface} × ${result.bytePerTrack} = **${result.bytePerSurface} байт**\n")
-                            append("- 1 диск: ${result.surfacesPerDisk} × ${result.bytePerSurface} = **${result.bytePerDisk} байт**\n\n")
-                            
-                            append("### Файл\n")
-                            append("- Размер файла: ${result.recordsCount} × ${result.bytesPerRecord} = **${result.fileSize} байт**\n")
-                            append("- Записей в секторе: **${result.recordsInOneSector}**\n\n")
-                            
-                            append("### Формулы\n")
-                            append("```\n")
-                            append("Секторов = ⌈${result.recordsCount} / ${result.recordsInOneSector}⌉\n")
-                            append("         = ${result.sectorsForFile}\n\n")
-                            append("Дорожек = ⌈${result.sectorsForFile} / ${result.sectorsPerTrack}⌉\n")
-                            append("        = ${result.tracksForFile}\n\n")
-                            append("Размер = ${result.sectorsForFile} × ${result.bytePerSector}\n")
-                            append("       = ${result.realSizeFile} байт\n")
-                            append("```")
-                        }
+                        content = result.getFormattedDetails()
                     )
                 }
             }
