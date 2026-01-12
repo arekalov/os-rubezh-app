@@ -218,6 +218,13 @@ fun DiskContent(
             }
             
             item {
+                ResultCard(
+                    title = "5. Внутренняя фрагментация",
+                    content = "${NumberFormatter.format(result.totalFragmentation)} байт"
+                )
+            }
+            
+            item {
                 CalculatorButton(
                     text = if (uiState.showDetails) "Скрыть детали" else "Подробнее",
                     onClick = onToggleDetails

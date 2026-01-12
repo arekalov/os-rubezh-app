@@ -29,11 +29,28 @@ class DiskCalculator @Inject constructor() {
         
         val realSizeFile = sectorsForFile * bytePerSector
         
+        // Расчет фрагментации (задание 3)
+        // Полезных байт в секторе (с учетом целого числа записей)
+        val usefulBytesPerSector = recordsInOneSector * bytesPerRecord
+        
+        // Фрагментация в одном секторе
+        val fragmentationPerSector = bytePerSector - usefulBytesPerSector
+        
+        // Байт на последнем секторе
+        val bytesOnLastSector = fileSize - (sectorsForFile - 1) * usefulBytesPerSector
+        
+        // Фрагментация на последнем секторе
+        val fragmentationOnLastSector = bytePerSector - bytesOnLastSector
+        
+        // Итоговая фрагментация
+        val totalFragmentation = (sectorsForFile - 1) * fragmentationPerSector + fragmentationOnLastSector
+        
         return DiskResult(
             sectorsForFile = sectorsForFile,
             tracksForFile = tracksForFile,
             realSizeFile = realSizeFile,
             sectorsOnLastTrack = sectorsOnLastTrack,
+            totalFragmentation = totalFragmentation,
             bytePerSector = bytePerSector,
             sectorsPerTrack = sectorsPerTrack,
             tracksPerSurface = tracksPerSurface,
@@ -44,7 +61,9 @@ class DiskCalculator @Inject constructor() {
             bytePerTrack = bytePerTrack,
             bytePerSurface = bytePerSurface,
             bytePerDisk = bytePerDisk,
-            fileSize = fileSize
+            fileSize = fileSize,
+            usefulBytesPerSector = usefulBytesPerSector,
+            fragmentationPerSector = fragmentationPerSector
         )
     }
 }

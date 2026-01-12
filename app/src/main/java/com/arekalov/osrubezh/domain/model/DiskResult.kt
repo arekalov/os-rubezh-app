@@ -7,6 +7,7 @@ data class DiskResult(
     val tracksForFile: Int,
     val realSizeFile: Int,
     val sectorsOnLastTrack: Int,
+    val totalFragmentation: Int,
     val bytePerSector: Int,
     val sectorsPerTrack: Int,
     val tracksPerSurface: Int,
@@ -17,7 +18,9 @@ data class DiskResult(
     val bytePerTrack: Int,
     val bytePerSurface: Int,
     val bytePerDisk: Int,
-    val fileSize: Int
+    val fileSize: Int,
+    val usefulBytesPerSector: Int,
+    val fragmentationPerSector: Int
 ) {
     fun getFormattedDetails(): String = buildString {
         appendLine("## Параметры диска")
@@ -46,15 +49,26 @@ data class DiskResult(
         appendLine("")
         appendLine("## Ответы")
         appendLine("### 1) Количество секторов для файла:")
-        appendLine("sectors = ceil($fileSize / $bytePerSector) = **${NumberFormatter.format(sectorsForFile)}**")
+        appendLine("sectors = ceil($recordsCount / $recordsInOneSector) = **${NumberFormatter.format(sectorsForFile)}**")
         appendLine("")
         appendLine("### 2) Количество дорожек для файла:")
         appendLine("tracks = ceil($sectorsForFile / $sectorsPerTrack) = **${NumberFormatter.format(tracksForFile)}**")
         appendLine("")
         appendLine("### 3) Реальный размер файла с фрагментацией:")
-        appendLine("real_size = $tracksForFile * $bytePerTrack = **${NumberFormatter.format(realSizeFile)}** байт")
+        appendLine("real_size = $sectorsForFile * $bytePerSector = **${NumberFormatter.format(realSizeFile)}** байт")
         appendLine("")
         appendLine("### 4) Секторов на последней дорожке:")
         appendLine("last_track_sectors = $sectorsForFile mod $sectorsPerTrack = **${NumberFormatter.format(sectorsOnLastTrack)}**")
+        appendLine("")
+        appendLine("## Задание 3: Фрагментация")
+        appendLine("### Полезных байт в секторе:")
+        appendLine("useful = $recordsInOneSector × $bytesPerRecord = **${NumberFormatter.format(usefulBytesPerSector)}** байт")
+        appendLine("")
+        appendLine("### Фрагментация в одном секторе:")
+        appendLine("frag_per_sector = $bytePerSector - $usefulBytesPerSector = **${NumberFormatter.format(fragmentationPerSector)}** байт")
+        appendLine("")
+        appendLine("### Внутренняя фрагментация:")
+        appendLine("total_frag = ${sectorsForFile - 1} × $fragmentationPerSector + остаток")
+        appendLine("total_frag = **${NumberFormatter.format(totalFragmentation)}** байт")
     }
 }
