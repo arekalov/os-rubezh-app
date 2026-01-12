@@ -6,4 +6,5 @@ sealed class Screen(val route: String) {
     data object Pointers : Screen("pointers")
     data object Numa : Screen("numa")
     data object Disk : Screen("disk")
+    data object FCFS : Screen("fcfs")
 }

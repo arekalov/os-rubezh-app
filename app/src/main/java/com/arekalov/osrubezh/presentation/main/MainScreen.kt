@@ -31,7 +31,8 @@ fun MainScreen(
         MenuItem("RAID", "raid"),
         MenuItem("Указатели / Stripe Units", "pointers"),
         MenuItem("Жесткий диск", "disk"),
-        MenuItem("NUMA", "numa")
+        MenuItem("NUMA", "numa"),
+        MenuItem("FCFS", "fcfs")
     )
 
     ScalingLazyColumn(
