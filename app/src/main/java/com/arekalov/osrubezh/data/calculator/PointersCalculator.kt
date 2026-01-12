@@ -1,14 +1,11 @@
 package com.arekalov.osrubezh.data.calculator
 
+import android.util.Log
 import com.arekalov.osrubezh.domain.model.PointersResult
 import javax.inject.Inject
-import kotlin.math.floor
+import kotlin.math.ceil
 
 class PointersCalculator @Inject constructor() {
-    
-    private fun myDiv(a: Int, b: Int): Int {
-        return floor((a + b - 1).toDouble() / b).toInt()
-    }
     
     fun calculate(
         directPointers: Int,
@@ -16,89 +13,103 @@ class PointersCalculator @Inject constructor() {
         blockSizeBytes: Int,
         fileSizeBytes: Long
     ): PointersResult {
-        val ppp = myDiv(blockSizeBytes * 8, pointerSizeBits)
-        val p0 = directPointers
-        val l1l2l3 = blockSizeBytes
-        val fileBlock = blockSizeBytes
-        val l0 = 0
+        Log.d("PointersCalc", "=== ВХОДНЫЕ ДАННЫЕ ===")
+        Log.d("PointersCalc", "Прямых указателей: $directPointers")
+        Log.d("PointersCalc", "Размер указателя: $pointerSizeBits бит")
+        Log.d("PointersCalc", "Размер блока: $blockSizeBytes байт")
+        Log.d("PointersCalc", "Размер файла: $fileSizeBytes байт")
         
-        var systemSum = 0L
-        var fileSum = 0L
-        var remainingSize = fileSizeBytes
-        var currentP0 = p0
+        // 1) Определяем количество блоков, в которые уместится файл
+        val totalFileBlocks = ceil(fileSizeBytes.toDouble() / blockSizeBytes).toLong()
+        Log.d("PointersCalc", "Всего блоков для файла: $totalFileBlocks")
         
-        // Direct pointers (p0)
-        while (currentP0 > 0 && remainingSize >= 0) {
-            fileSum += fileBlock
-            remainingSize -= fileBlock
-            currentP0--
+        // Указателей в одном блоке
+        val pointersPerBlock = (blockSizeBytes * 8) / pointerSizeBits
+        Log.d("PointersCalc", "Указателей в блоке: $pointersPerBlock")
+        
+        // 2) Считаем уровни
+        var remaining = totalFileBlocks
+        
+        // p0: прямые указатели
+        val p0FileBlocks = minOf(remaining, directPointers.toLong())
+        val sum_p0 = if (p0FileBlocks > 0) 1L else 0L  // 1 служебный блок (сам inode)
+        remaining -= p0FileBlocks
+        Log.d("PointersCalc", "p0: для файла=$p0FileBlocks, служебных=$sum_p0, осталось=$remaining")
+        
+        // p1: одинарная косвенность
+        val p1FileBlocks = minOf(remaining, pointersPerBlock.toLong())
+        val sum_p1 = if (p1FileBlocks > 0) 1L else 0L  // 1 служебный блок
+        remaining -= p1FileBlocks
+        Log.d("PointersCalc", "p1: для файла=$p1FileBlocks, служебных=$sum_p1, осталось=$remaining")
+        
+        // p2: двойная косвенность
+        val p2MaxBlocks = pointersPerBlock.toLong() * pointersPerBlock
+        val p2FileBlocks = minOf(remaining, p2MaxBlocks)
+        val sum_p2 = if (p2FileBlocks > 0) {
+            val l2Blocks = ceil(p2FileBlocks.toDouble() / pointersPerBlock).toLong()
+            l2Blocks + 1  // блоки L2 + 1 блок L1
+        } else {
+            0L
         }
+        remaining -= p2FileBlocks
+        Log.d("PointersCalc", "p2: для файла=$p2FileBlocks, служебных=$sum_p2, осталось=$remaining")
         
-        // Single indirect (p1)
-        var p1_0 = ppp
-        val kp1_0 = ppp
-        while (p1_0 > 0 && remainingSize >= 0) {
-            if (p1_0 == kp1_0) systemSum += l1l2l3
-            p1_0--
-            fileSum += fileBlock
-            remainingSize -= fileBlock
-        }
-        
-        // Double indirect (p2)
-        var p2_0 = ppp
-        val kp2_0 = ppp
-        val kp2_1 = ppp
-        while (p2_0 > 0 && remainingSize >= 0) {
-            if (p2_0 == kp2_0) systemSum += l1l2l3
-            p2_0--
-            var p2_1 = ppp
-            while (p2_1 > 0 && remainingSize >= 0) {
-                if (p2_1 == kp2_1) systemSum += l1l2l3
-                fileSum += fileBlock
-                remainingSize -= fileBlock
-                p2_1--
+        // p3: тройная косвенность
+        val sum_p3 = if (remaining > 0) {
+            val p3FileBlocks = remaining
+            
+            // Сколько блоков L2 нужно полностью заполнить
+            val fullL2Blocks = (p3FileBlocks / p2MaxBlocks).toInt()
+            var p3Remaining = p3FileBlocks % p2MaxBlocks
+            
+            // Сколько блоков L3 нужно для остатка
+            val partialL2Blocks = if (p3Remaining > 0) 1 else 0
+            val l3BlocksInPartial = if (p3Remaining > 0) {
+                ceil(p3Remaining.toDouble() / pointersPerBlock).toLong()
+            } else {
+                0L
             }
+            
+            // Общее количество служебных блоков:
+            // - 1 блок на L1 (сам p3)
+            // - fullL2Blocks + partialL2Blocks блоков на L2
+            // - fullL2Blocks * pointersPerBlock блоков L3 для полных L2
+            // - l3BlocksInPartial блоков L3 для частичного L2
+            val l1Blocks = 1L
+            val l2Blocks = (fullL2Blocks + partialL2Blocks).toLong()
+            val l3Blocks = fullL2Blocks * pointersPerBlock + l3BlocksInPartial
+            
+            Log.d("PointersCalc", "p3: L1=$l1Blocks, L2=$l2Blocks, L3=$l3Blocks")
+            Log.d("PointersCalc", "p3: полных L2=$fullL2Blocks, частичных L2=$partialL2Blocks")
+            
+            l1Blocks + l2Blocks + l3Blocks
+        } else {
+            0L
         }
         
-        // Triple indirect (p3)
-        var p3_0 = ppp
-        val kp3_0 = ppp
-        val kp3_1 = ppp
-        val kp3_2 = ppp
-        while (p3_0 > 0 && remainingSize >= 0) {
-            if (p3_0 == kp3_0) systemSum += l1l2l3
-            p3_0--
-            var p3_1 = ppp
-            while (p3_1 > 0 && remainingSize >= 0) {
-                if (p3_1 == kp3_1) systemSum += l1l2l3
-                p3_1--
-                var p3_2 = ppp
-                while (p3_2 > 0 && remainingSize >= 0) {
-                    if (p3_2 == kp3_2) systemSum += l1l2l3
-                    fileSum += fileBlock
-                    remainingSize -= fileBlock
-                    p3_2--
-                }
-            }
-        }
+        Log.d("PointersCalc", "p3: служебных=$sum_p3")
         
-        val systemBlocks = (if (l0 > 0) 1 else 0) + systemSum / l1l2l3
-        val fileBlocks = fileSum / fileBlock
-        val totalBlocks = systemBlocks + fileBlocks
-        val totalBytes = fileSum + systemSum
+        // 3) Суммируем
+        val totalSystemBlocks = sum_p0 + sum_p1 + sum_p2 + sum_p3
+        val totalBlocks = totalFileBlocks + totalSystemBlocks
+        
+        Log.d("PointersCalc", "=== ИТОГО ===")
+        Log.d("PointersCalc", "Блоков для файла: $totalFileBlocks")
+        Log.d("PointersCalc", "Служебных блоков: $totalSystemBlocks (p0=$sum_p0, p1=$sum_p1, p2=$sum_p2, p3=$sum_p3)")
+        Log.d("PointersCalc", "Всего блоков: $totalBlocks")
         
         return PointersResult(
             totalBlocks = totalBlocks,
-            systemBytes = systemSum + l0,
-            systemBlocks = systemBlocks,
-            fileBytes = fileSum,
-            fileBlocks = fileBlocks,
-            totalBytes = totalBytes,
+            systemBytes = totalSystemBlocks * blockSizeBytes,
+            systemBlocks = totalSystemBlocks,
+            fileBytes = totalFileBlocks * blockSizeBytes,
+            fileBlocks = totalFileBlocks,
+            totalBytes = totalBlocks * blockSizeBytes,
             directPointers = directPointers,
             pointerSizeBits = pointerSizeBits,
             blockSizeBytes = blockSizeBytes,
             fileSizeBytes = fileSizeBytes,
-            pointersPerBlock = ppp
+            pointersPerBlock = pointersPerBlock
         )
     }
 }
